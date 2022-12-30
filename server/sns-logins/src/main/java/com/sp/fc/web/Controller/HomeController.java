@@ -12,7 +12,7 @@ public class HomeController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/greeting")
     public OAuth2User greeting(@AuthenticationPrincipal OAuth2User user){
-    // 구글에서 수많은 정보를 전닿해 줌.
+    // 구글에서 수많은 정보를 전닿해 줌
         return user;
     }
 }
