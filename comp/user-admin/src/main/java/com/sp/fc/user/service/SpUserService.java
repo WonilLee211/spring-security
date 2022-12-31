@@ -1,7 +1,9 @@
 package com.sp.fc.user.service;
 
 import com.sp.fc.user.domain.SpAuthority;
+import com.sp.fc.user.domain.SpOAuth2User;
 import com.sp.fc.user.domain.SpUser;
+import com.sp.fc.user.repository.SpOAuth2UserRepository;
 import com.sp.fc.user.repository.SpUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +23,8 @@ public class SpUserService implements UserDetailsService {
     @Autowired
     private SpUserRepository userRepository;
 
+    @Autowired
+    private SpOAuth2UserRepository oAuth2UserRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findUserByEmail(username).orElseThrow(
@@ -65,5 +69,25 @@ public class SpUserService implements UserDetailsService {
                 save(user);
             }
         });
+    }
+
+    public SpUser load(SpOAuth2User oAuth2User){
+        SpOAuth2User dbUser = oAuth2UserRepository.findById(oAuth2User.getUserId())
+                .orElseGet(() ->{
+
+                    // 최초 등록일 때
+                    SpUser user = new SpUser();
+                    user.setEmail(oAuth2User.getEmail());
+                    user.setName(oAuth2User.getName());
+                    user.setEnabled(true);
+                    user = userRepository.save(user);
+                    addAuthority(user.getUserId(), "ROLE_USER");
+
+                    oAuth2User.setUserId(user.getUserId());
+                    return oAuth2UserRepository.save(oAuth2User);
+
+                });
+        return userRepository.findById(dbUser.getUserId()).get();
+
     }
 }
